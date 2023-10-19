@@ -1,0 +1,256 @@
+---
+title: "Data Visualization Remake Take 2"
+author: "Tim Essam, Karishma Srikanth & Aaron Chafetz"
+format: html
+editor: visual
+fig-dpi: 300
+---
+
+## Local Partner Data
+
+The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The .csv file consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
+
+### Preparing your work space
+
+To load, munge and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment.
+
+```{r prep environment}
+#| warning: false
+#| output: false
+
+library(tidyverse)
+library(vroom)
+library(glitr)
+library(scales) # for formatting
+library(glue)
+
+```
+
+## Loading and inspecting the data
+
+You can load the data directly from github using the `vroom` package.
+
+```{r load libraries}
+url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
+
+df <- vroom(url)
+glimpse(df)
+```
+
+Let's start be remaking the original visual in the default format you would likely see in an Excel workbook. Creating a stacked bar graph is much easier if we have the data stacked in a long format. We will also apply some colors to the type of funding.
+
+```{r excel_prep}
+#| warning: false
+#| output: true
+  
+# Excel default colors
+blue <- "#3C67BE"
+orange <- "#F27A2A"
+
+# Reshape the data so there is a single column for the share value and a column for the type of funding
+# Set pre-defined colors for various funding thresholds
+
+df_long <- 
+  df %>% 
+  # Sort the operating units based on the local share
+  mutate(operating_unit = fct_reorder(operating_unit, local),
+         operating_unit = fct_relevel(operating_unit, "Total", after = Inf)) %>% 
+    pivot_longer(
+    cols = local:international,
+    names_to = "type",
+    values_to = "share"
+  ) %>%
+  mutate(fill_color = case_when(
+    type == "local" ~ blue,
+    TRUE ~ orange
+    )
+  ) %>% 
+  rename(ou = operating_unit) %>% 
+  arrange(ou)
+  
+
+glimpse(df_long)
+```
+
+### Building a plot from the ground up
+
+```{r}
+df_long %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = type)) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+
+```
+
+Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
+
+### Get it right in black and white
+
+One of our common operating procedures is to try to get a plot right first in black and white, and then add color as needed. To convert the filled bars to black and white we can either create a new column and pass that to the `scale_fill_identity()` function or we can use `scale_fill_manual()` to manually recolor.
+
+```{r black and white}
+df_long %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = type)) +
+  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+```
+
+### Do we need labels?
+
+We can add the labels back into the graph using the `geom_label()` function.
+
+```{r adding labels}
+df_long %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = type)) +
+  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
+  geom_label(aes(label = percent(share, 1)),
+    size = 8 / .pt,
+    position = position_stack(vjust = 0.5)
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+```
+
+In this case, the labels do not add much value, in fact they are kind of distracting. If the share in each country has to add to 100 and the focus of the graphic is on the local partner share, we can drop one of the labels and let the reader calculate the international share independently (it's not the focus).
+
+One way to remove the international shares from the graph would be to filter the data frame to `type == "local"`. With the international share bar and text dropped, we can also soften the labels using the `geom_text()` function. This drops the stroke and fill around the text object.
+
+```{r filter and simplify text}
+df_long %>% 
+  filter(type == "local") %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = type)) +
+  # scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
+  scale_fill_manual(values = c("local" = "#be3455")) +
+  geom_text(aes(label = percent(share, 1)),
+    size = 7 / .pt,
+    hjust = 0,
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+```
+
+### Creating breathing room with facets
+
+If you recall from earlier in our talk, we mentioned that the USAID local partner goal was 70%. How can we break up the operating units to create some groupings? ...
+
+```{r}
+df_lp <- 
+  df_long %>% 
+ filter(type == "local") %>% 
+ mutate(
+    facet_order = case_when(
+      ou == "Total" ~ "",
+      goal == 1 ~ "> 70%",
+      TRUE ~ "< 70%"
+    ),
+    facet_order = fct_relevel(facet_order, c("", "> 70%", "< 70%"))
+  ) %>%
+  mutate(recolor = case_when(
+    facet_order == "" ~ "#7f2339",
+    goal == 1 ~ "#be3455",
+    goal == 0 ~ "#d38388",
+    TRUE ~ grey20k)
+  )
+```
+
+Applying the new facets and colors
+
+```{r apply facets and colors}
+p_lp <- df_lp %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
+  geom_col(aes(fill = recolor)) +
+  scale_fill_identity() +
+  geom_text(aes(label = percent(share, 1)),
+    size = 7 / .pt,
+    hjust = 0,
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) +
+  scale_x_continuous(limits = c(0, 1.1)) +
+  facet_grid(facet_order ~ ., scales = "free_y", drop = T, space = "free") 
+
+p_lp
+```
+
+Starting to get some breathing room, but we still have a lot of extra chart junk competing for our attention. Let's continue to reduce clutter and focus the visualization on the 70% threshold.
+
+```{r}
+p_lp <- df_lp %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
+  geom_col(aes(fill = recolor)) +
+  scale_fill_identity() +
+  geom_text(aes(label = percent(share, 1)),
+    size = 7 / .pt,
+    hjust = 0,
+    family = "Source Sans Pro"
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) +
+  si_style_yline(facet_space = 0.5) +
+  scale_x_continuous(limits = c(0, 1.1)) +
+  facet_grid(facet_order ~ ., scales = "free_y", drop = T, space = "free") +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.text.x = element_blank(), 
+        axis.text.y = element_text(size = 8)) 
+p_lp
+```
+
+Clean up the edges & Add annotation
+
+```{r final_touches}
+#| warning: false
+#| output: true
+
+goal_text <- "Four OUs reached\nthe 70% goal"
+fail_text <- "All of these operating\nunits fell short of the\n70% goal"
+font_size <- 7/.pt
+
+p_lp +
+  coord_cartesian(clip = "off", expand = F) +
+  geom_text(data = . %>% filter(facet_order == ""), 
+            aes(x = .45, label = "local partner share"),
+            color = "white", size = font_size) +
+    geom_text(data = . %>% filter(facet_order == ""), 
+            aes(x = .71, label = "70% threshold"),
+            color = grey60k, size = font_size, 
+            hjust = -0.1) +
+  geom_text(data = . %>% filter(facet_order == "> 70%" & ou == "Rwanda"), 
+            aes(x = .9, label = goal_text),
+            color = "#be3455", size = font_size, 
+            vjust = 1, hjust = 0) +
+  geom_text(data = . %>% filter(facet_order == "< 70%" & ou == "Botswana"), 
+            aes(x = .72, label = fail_text),
+            color = "#d38388", size = font_size, 
+            vjust = 1, hjust = 0) +
+  
+  labs(title = "IN FY21, FOUR OPERATING UNITS HAD ACHIEVED THE USAID LOCAL\nPARTNER BUDGET SHARE GOAL OF 70%",
+    subtitle = "Twenty four operating units are still short of the goal.",
+    fill = NULL,
+    caption = glue("Source: Local Partner Team Data"))
+```
