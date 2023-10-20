@@ -15,7 +15,7 @@ To load, munge and visualize the data requires numerous R packages. The code chu
 
 ```{r prep environment}
 #| echo: false
-#| warnings: false
+#| warning: false
 library(tidyverse)
 library(vroom)
 library(glitr)
