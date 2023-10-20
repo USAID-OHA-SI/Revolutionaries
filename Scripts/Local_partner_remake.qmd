@@ -14,7 +14,8 @@ The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congre
 To load, munge and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment.
 
 ```{r prep environment}
-
+#| echo: false
+#| warnings: false
 library(tidyverse)
 library(vroom)
 library(glitr)

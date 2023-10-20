@@ -31,9 +31,14 @@ library(glue)
 You can load the data directly from github using the `vroom` package.
 
 ```{r load libraries}
+#| output: false
 url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
 
 df <- vroom(url)
+```
+
+```{r}
+# Inspect the data
 glimpse(df)
 ```
 
@@ -65,7 +70,8 @@ df_long <-
     TRUE ~ orange
     )
   ) %>% 
-  rename(ou = operating_unit) %>% 
+  rename(ou = operating_unit, 
+         ou_long = operating_unit_long) %>% 
   arrange(ou)
   
 
@@ -74,8 +80,35 @@ glimpse(df_long)
 
 ### Building a plot from the ground up
 
+::: panel-tabset
+### Code
+
+```{r `code-line-numbers` = "2,3"}
+
+p <- df_long %>% 
+  ggplot(aes(y = ou_long, x = share)) +
+  geom_col(aes(fill = type)) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+```
+
+### Plot
+
 ```{r}
-df_long %>% 
+p
+```
+:::
+
+### Sorting data.
+
+::: panel-tabset
+### Code
+
+```{r}
+p <- df_long %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_col(aes(fill = type)) +
   labs(
@@ -83,8 +116,14 @@ df_long %>%
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
   ) 
-
 ```
+
+### Plot
+
+```{r}
+p
+```
+:::
 
 Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
 
@@ -92,11 +131,20 @@ Sorting the data makes a huge difference already. We can start to see some order
 
 One of our common operating procedures is to try to get a plot right first in black and white, and then add color as needed. To convert the filled bars to black and white we can either create a new column and pass that to the `scale_fill_identity()` function or we can use `scale_fill_manual()` to manually recolor.
 
-```{r black and white}
-df_long %>% 
+::: panel-tabset
+### Code: identity
+
+```{r `code-line-numbers` ="6-8"}
+p1 <- 
+  df_long %>% 
+  mutate(fill_color = case_when(
+    type == "local" ~ grey90k,
+    TRUE ~ grey30k
+  )) %>% 
   ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
-  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
+  scale_fill_identity() +
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
@@ -104,15 +152,27 @@ df_long %>%
   ) 
 ```
 
+### Plot: identity
+
+```{r identity plot}
+p1
+```
+:::
+
 ### Do we need labels?
 
 We can add the labels back into the graph using the `geom_label()` function.
 
 ```{r adding labels}
 df_long %>% 
+  mutate(fill_color = case_when(
+    type == "local" ~ grey90k,
+    TRUE ~ grey30k
+  )) %>% 
   ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
-  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
+  scale_fill_identity() +
   geom_label(aes(label = percent(share, 1)),
     size = 8 / .pt,
     position = position_stack(vjust = 0.5)
@@ -254,3 +314,4 @@ p_lp +
     fill = NULL,
     caption = glue("Source: Local Partner Team Data"))
 ```
+
