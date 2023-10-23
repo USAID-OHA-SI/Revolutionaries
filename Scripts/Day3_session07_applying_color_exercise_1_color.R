@@ -8,7 +8,7 @@
   library(gagglr)
   
   # Load data
-  df_msd <- read_rds("Data/df_msd.rds")
+  df_msd <- read_rds("Data_public/df_msd.rds")
   
   # Set core data frame for exercises and examples
   df_tst_psnu <- df_msd %>%
