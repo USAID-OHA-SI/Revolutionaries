@@ -23,6 +23,8 @@ library(vroom)
 library(glitr)
 library(scales) # for formatting
 library(glue)
+library(gt)
+library(gtExtras)
 
 ```
 
@@ -58,9 +60,27 @@ orange <- "#F27A2A"
 df_long <- 
   df %>% 
   # Sort the operating units based on the local share
+  # Sorting and creating factors prior to reshaping makes plotting easier
   mutate(operating_unit = fct_reorder(operating_unit, local),
-         operating_unit = fct_relevel(operating_unit, "Total", after = Inf)) %>% 
-    pivot_longer(
+         operating_unit = fct_relevel(operating_unit, "Total", after = Inf),
+         operating_unit_long = fct_relevel(operating_unit_long, "Total", after = Inf)) %>% 
+  arrange(operating_unit)
+
+# Preview as a gt table
+# View the resulting data frame as a table
+gt::gt(df_long) %>% 
+  gtExtras::gt_theme_nytimes()
+
+```
+
+Reshaping
+
+Making a stacked bar graph is easier if your data are in a long format. In this case, we want to stack the share of funding into a single column and create a new column that captures the type of funding. We also use this opportunity to assign a blue color to locally funded partners and orange to international. We finish by renaming our operating unit variable.
+
+```{r}
+df_long <- 
+  df_long %>% 
+  pivot_longer(
     cols = local:international,
     names_to = "type",
     values_to = "share"
@@ -74,8 +94,8 @@ df_long <-
          ou_long = operating_unit_long) %>% 
   arrange(ou)
   
-
-glimpse(df_long)
+gt::gt(df_long) %>% 
+  gtExtras::gt_theme_nytimes()
 ```
 
 ### Building a plot from the ground up
@@ -87,12 +107,14 @@ glimpse(df_long)
 
 p <- df_long %>% 
   ggplot(aes(y = ou_long, x = share)) +
-  geom_col(aes(fill = type)) +
+  geom_col(aes(fill = fill_color),
+           position = position_stack(reverse = T)) +
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
-  ) 
+  ) +
+  scale_fill_identity()
 ```
 
 ### Plot
@@ -110,12 +132,13 @@ p
 ```{r}
 p <- df_long %>% 
   ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
+  geom_col(aes(fill = fill_color)) +
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
-  ) 
+  ) +
+  scale_fill_identity()
 ```
 
 ### Plot
@@ -314,4 +337,3 @@ p_lp +
     fill = NULL,
     caption = glue("Source: Local Partner Team Data"))
 ```
-

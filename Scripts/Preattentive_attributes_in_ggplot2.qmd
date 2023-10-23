@@ -1,0 +1,173 @@
+---
+title: "Creating Pre-attentive attributes"
+author: "Tim Essam"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+#| eval: false
+#| echo: false
+# Install the_mask
+# remotes::install_github("USAID-OHA-SI/themask", build_vignettes = TRUE)
+# 
+# # URL to data
+# https://github.com/USAID-OHA-SI/themask/releases/download/2023.06.16.c/MER_Structured_TRAINING_Datasets_PSNU_IM_FY58-60_20230616_v2_1.zip
+# 
+# 
+# 
+# library(themask)
+# library(glitr)
+# library(tidyverse)
+# #see the historic versions available
+# msk_available()
+# #reference that older version in the tag to download (default = latest)
+# msk_download("Data", tag = "2023.06.16.c")
+# 
+# # Had to download manually. Create a compressed dataset for the examples.
+
+```
+
+Load the PEPFAR data into your work space.
+
+```{r data prep}
+#| echo: false
+# Load data, munge down to smaller dataset
+#    df_msd <- return_latest("Data", "PSNU_IM") %>%
+#       read_psd() %>% 
+#       filter(indicator == "HTS_TST_POS", 
+#              standardizeddisaggregate == "Total Numerator")
+#   
+# write_rds(df_msd, "Data/df_msd.rds")
+
+# Read in MSD data - simplified to only testing data
+df_msd <- read_rds("Data/df_msd.rds")
+  
+# Subset the MSD for examples
+df_tst_psnu <- df_msd %>%
+  filter(indicator == "HTS_TST_POS") %>%
+  summarize(
+    cumulative = sum(cumulative, na.rm = T),
+    .by = c("fiscal_year", "indicator", "psnu")
+  ) %>%
+  arrange(psnu) %>%
+  mutate(fy = as.character(fiscal_year)) %>% 
+  slice(1:9)
+
+write_rds(df_tst_psnu, "Data/df_tst_psnu.rds")
+
+# What does this dataset look like?
+df_tst_psnu
+glimpse(df_tst_psnu)
+  
+```
+
+# Pre-attentive attributes in ggplot2
+
+```{r color}
+# Set height and width
+  h <- 3.25
+  w <- 5.75
+
+# geom_col
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+    color = psnu
+  )) +
+  geom_point(size = 4)
+si_save("Images/ggplot_aes_color.png", height = h, width = w)
+```
+
+```{r size}
+# Size
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+    size = cumulative
+  )) +
+  geom_point()
+si_save("Images/ggplot_aes_size.png", height = h, width = w)
+```
+
+```{r shape}
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+    shape = psnu
+  )) +
+  geom_point(size = 4, position = position_jitter(width = 0.15))
+si_save("Images/ggplot_aes_shape", height = h, width = w)
+```
+
+```{r saturation}
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+    alpha = cumulative
+  )) +
+  geom_point(size = 5)
+si_save("Images/ggplot_aes_transparency", height = h, width = w)
+```
+
+```{r}
+{r saturation}
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+  )) +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1200, ymax = 1600, alpha = .15) +
+  geom_point(size = 5) 
+si_save("Images/ggplot_aes_enclosure", height = h, width = w)
+```
+
+```{r combo}
+# Combining color, shape and size
+df_tst_psnu %>%
+  ggplot(aes(
+    x = fy,
+    y = cumulative,
+    color = psnu,
+    size = cumulative,
+    shape = psnu
+  )) +
+  geom_point()
+si_save("Images/ggplot_aes_combining", height = h, width = w)
+```
+
+```{r}
+# Combine it with glitr colors and themes
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = psnu)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1)) + 
+  si_style() +
+  scale_color_si(palette = "genoa", discrete = T) +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023")
+```
+
+```{r}
+# Modify the style
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = psnu)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1)) + 
+  si_style_ygrid() +
+  scale_color_si(palette = "genoa", discrete = T) +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023")
+```
