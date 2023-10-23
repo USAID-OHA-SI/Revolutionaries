@@ -5,41 +5,22 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Pre-attentive attributes in ggplot2 and R
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+In the code below, we review a few of the pre-attentive attributes covered in our lecture.
 
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-#| eval: false
-#| echo: false
-# Install the_mask
-# remotes::install_github("USAID-OHA-SI/themask", build_vignettes = TRUE)
-# 
-# # URL to data
-# https://github.com/USAID-OHA-SI/themask/releases/download/2023.06.16.c/MER_Structured_TRAINING_Datasets_PSNU_IM_FY58-60_20230616_v2_1.zip
-# 
-# 
-# 
-# library(themask)
-# library(glitr)
-# library(tidyverse)
-# #see the historic versions available
-# msk_available()
-# #reference that older version in the tag to download (default = latest)
-# msk_download("Data", tag = "2023.06.16.c")
-# 
-# # Had to download manually. Create a compressed dataset for the examples.
-
-```
+To learn more about ggplot2's asthetics see the `vignette("ggplot2-specs")` document.
 
 Load the PEPFAR data into your work space.
 
-```{r data prep}
+```{r prep}
 #| echo: false
+
+# Load the libraries needed
+library(glitr)
+library(glamr)
+library(tidyverse)
+
 # Load data, munge down to smaller dataset
 #    df_msd <- return_latest("Data", "PSNU_IM") %>%
 #       read_psd() %>% 
@@ -49,7 +30,8 @@ Load the PEPFAR data into your work space.
 # write_rds(df_msd, "Data/df_msd.rds")
 
 # Read in MSD data - simplified to only testing data
-df_msd <- read_rds("Data/df_msd.rds")
+dir()
+df_msd <- read_rds("Data_public/df_msd.rds")
   
 # Subset the MSD for examples
 df_tst_psnu <- df_msd %>%
@@ -62,7 +44,7 @@ df_tst_psnu <- df_msd %>%
   mutate(fy = as.character(fiscal_year)) %>% 
   slice(1:9)
 
-write_rds(df_tst_psnu, "Data/df_tst_psnu.rds")
+write_rds(df_tst_psnu, "Data_public/df_tst_psnu.rds")
 
 # What does this dataset look like?
 df_tst_psnu
@@ -70,7 +52,7 @@ glimpse(df_tst_psnu)
   
 ```
 
-# Pre-attentive attributes in ggplot2
+### Color
 
 ```{r color}
 # Set height and width
@@ -88,6 +70,8 @@ df_tst_psnu %>%
 si_save("Images/ggplot_aes_color.png", height = h, width = w)
 ```
 
+### Size
+
 ```{r size}
 # Size
 df_tst_psnu %>%
@@ -100,6 +84,8 @@ df_tst_psnu %>%
 si_save("Images/ggplot_aes_size.png", height = h, width = w)
 ```
 
+### Shape
+
 ```{r shape}
 df_tst_psnu %>%
   ggplot(aes(
@@ -110,6 +96,8 @@ df_tst_psnu %>%
   geom_point(size = 4, position = position_jitter(width = 0.15))
 si_save("Images/ggplot_aes_shape", height = h, width = w)
 ```
+
+### Saturation
 
 ```{r saturation}
 df_tst_psnu %>%
@@ -122,8 +110,9 @@ df_tst_psnu %>%
 si_save("Images/ggplot_aes_transparency", height = h, width = w)
 ```
 
-```{r}
-{r saturation}
+### Enclosure
+
+```{r enclosure}
 df_tst_psnu %>%
   ggplot(aes(
     x = fy,
@@ -133,6 +122,8 @@ df_tst_psnu %>%
   geom_point(size = 5) 
 si_save("Images/ggplot_aes_enclosure", height = h, width = w)
 ```
+
+### Putting them all together
 
 ```{r combo}
 # Combining color, shape and size
@@ -148,26 +139,84 @@ df_tst_psnu %>%
 si_save("Images/ggplot_aes_combining", height = h, width = w)
 ```
 
-```{r}
+### Applying glitr colors
+
+```{r genoa}
 # Combine it with glitr colors and themes
 df_tst_psnu %>%
   ggplot(aes(x = fy, y = cumulative, color = psnu)) +
-  geom_point(size = 4, position = position_jitter(width = 0.1)) + 
-  si_style() +
+  geom_point(size = 4, position = position_jitter(width = 0.1, seed = 42)) + 
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
        caption = "Faux MSD 2023")
+
+si_save("Images/ggplot_glitr_colors_genoa", height = h, width = w)
+
+# si_palettes$genoas %>% scales::show_col(ncol = 5)
+# si_palettes$denim %>% scales::show_col(ncol = 5)
+# si_palettes$denims %>% scales::show_col(ncol = 5)
 ```
 
-```{r}
+```{r denim}
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = psnu)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1,
+                                                  seed = 42)) + 
+  scale_color_si(palette = "denim", discrete = T) +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023")
+si_save("Images/ggplot_glitr_colors_denim", height = h, width = w)
+```
+
+```{r denims}
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = cumulative)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1, seed = 42)) + 
+  scale_color_si(palette = "denims") +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023")
+si_save("Images/ggplot_glitr_colors_denims", height = h, width = w)
+```
+
+### Reducing clutter with `si_style()`
+
+```{r si_style}
 # Modify the style
 df_tst_psnu %>%
   ggplot(aes(x = fy, y = cumulative, color = psnu)) +
-  geom_point(size = 4, position = position_jitter(width = 0.1)) + 
+  geom_point(size = 4, position = position_jitter(width = 0.1, seed = 42)) + 
+  scale_color_si(palette = "genoa", discrete = T) +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023") +
+  si_style()
+si_save("Images/ggplot_glitr_colors_si_style", height = h, width = w)
+```
+
+```{r si_style_ygrid}
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = psnu)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1, seed = 42)) + 
+  scale_color_si(palette = "genoa", discrete = T) +
+  labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
+       subtitle = "2060 results through Q2",
+       caption = "Faux MSD 2023") +
+  si_style_ygrid() 
+si_save("Images/ggplot_glitr_colors_si_style_ygrid", height = h, width = w)
+```
+
+```{r si_style_xline}
+df_tst_psnu %>%
+  ggplot(aes(x = fy, y = cumulative, color = psnu)) +
+  geom_point(size = 4, position = position_jitter(width = 0.1, seed = 42)) + 
   si_style_ygrid() +
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023")
+       caption = "Faux MSD 2023") +
+  si_style_xline()
+si_save("Images/ggplot_glitr_colors_si_style_xline", height = h, width = w)
 ```
