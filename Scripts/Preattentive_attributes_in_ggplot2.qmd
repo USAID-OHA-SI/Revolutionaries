@@ -1,7 +1,10 @@
 ---
 title: "Creating Pre-attentive attributes"
-author: "Tim Essam"
-format: html
+author: "Tim Essam, Karishma Srikanth & Aaron Chafetz"
+format: 
+  html:
+    code-tools: true
+    code-copy: true
 editor: visual
 ---
 
@@ -9,42 +12,23 @@ editor: visual
 
 In the code below, we review a few of the pre-attentive attributes covered in our lecture.
 
-To learn more about ggplot2's asthetics see the `vignette("ggplot2-specs")` document.
+To learn more about ggplot2's aesthetics see the `vignette("ggplot2-specs")` document.
 
 Load the PEPFAR data into your work space.
 
 ```{r prep}
-#| echo: false
+#| echo: true
+#| warning: false
 
 # Load the libraries needed
 library(glitr)
 library(glamr)
 library(tidyverse)
+library(extrafont)
 
 # Load data, munge down to smaller dataset
-#    df_msd <- return_latest("Data", "PSNU_IM") %>%
-#       read_psd() %>% 
-#       filter(indicator == "HTS_TST_POS", 
-#              standardizeddisaggregate == "Total Numerator")
-#   
-# write_rds(df_msd, "Data/df_msd.rds")
-
-# Read in MSD data - simplified to only testing data
-dir()
-df_msd <- read_rds("Data_public/df_msd.rds")
-  
-# Subset the MSD for examples
-df_tst_psnu <- df_msd %>%
-  filter(indicator == "HTS_TST_POS") %>%
-  summarize(
-    cumulative = sum(cumulative, na.rm = T),
-    .by = c("fiscal_year", "indicator", "psnu")
-  ) %>%
-  arrange(psnu) %>%
-  mutate(fy = as.character(fiscal_year)) %>% 
-  slice(1:9)
-
-write_rds(df_tst_psnu, "Data_public/df_tst_psnu.rds")
+url <- "https://github.com/USAID-OHA-SI/Revolutionaries/raw/tim_dev/Data_public/df_tst_psnu.rds"
+df_tst_psnu <- read_rds(url)
 
 # What does this dataset look like?
 df_tst_psnu
@@ -55,6 +39,7 @@ glimpse(df_tst_psnu)
 ### Color
 
 ```{r color}
+
 # Set height and width
   h <- 3.25
   w <- 5.75
@@ -118,7 +103,7 @@ df_tst_psnu %>%
     x = fy,
     y = cumulative,
   )) +
-  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1200, ymax = 1600, alpha = .15) +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 800, ymax = 1000, alpha = .15) +
   geom_point(size = 5) 
 si_save("Images/ggplot_aes_enclosure", height = h, width = w)
 ```
@@ -149,7 +134,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023")
+       caption = "Source: Faux MSD 2023")
 
 si_save("Images/ggplot_glitr_colors_genoa", height = h, width = w)
 
@@ -166,7 +151,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "denim", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023")
+       caption = "Source: Faux MSD 2023")
 si_save("Images/ggplot_glitr_colors_denim", height = h, width = w)
 ```
 
@@ -177,7 +162,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "denims") +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023")
+       caption = "Source: Faux MSD 2023")
 si_save("Images/ggplot_glitr_colors_denims", height = h, width = w)
 ```
 
@@ -191,7 +176,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023") +
+       caption = "Source: Faux MSD 2023") +
   si_style()
 si_save("Images/ggplot_glitr_colors_si_style", height = h, width = w)
 ```
@@ -203,7 +188,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023") +
+       caption = "Source: Faux MSD 2023") +
   si_style_ygrid() 
 si_save("Images/ggplot_glitr_colors_si_style_ygrid", height = h, width = w)
 ```
@@ -216,7 +201,7 @@ df_tst_psnu %>%
   scale_color_si(palette = "genoa", discrete = T) +
   labs(title = "ALBUQUERQUE LAGS BEHIND IN TESTING",
        subtitle = "2060 results through Q2",
-       caption = "Faux MSD 2023") +
+       caption = "Source: Faux MSD 2023") +
   si_style_xline()
 si_save("Images/ggplot_glitr_colors_si_style_xline", height = h, width = w)
 ```

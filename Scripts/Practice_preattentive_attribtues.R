@@ -5,32 +5,24 @@
 
 # Library
   library(tidyverse)
-  library(gagglr)
+  library(glitr)
   library(scales)
 
-# Load data
-  df_msd <- read_rds("Data_public/df_msd.rds")
-  
-  # Can also read directly from github
-  url <- "https://github.com/USAID-OHA-SI/Revolutionaries/raw/tim_dev/Data_public/df_msd.rds"
-  df_msd <- read_rds(url)
+# Load data directly from github
+  url <- 'https://github.com/USAID-OHA-SI/Revolutionaries/raw/tim_dev/Data_public/df_tst_psnu.rds'
+  df_tst_psnu <- read_rds(url)
   
 # Inspect the data
-  glimpse(df_msd)
-  names(df_msd)
-  view(df_msd)
+  glimpse(df_tst_psnu)
+  names(df_tst_psnu)
+  view(df_tst_psnu)
 
-# Data are HIV testing restuls at the mechanism level for various geographies in the Minoria
+# Data are HIV testing results at the mechanism level for various geographies in the Minoria
   
 # EXERCISE ----------------------------------------------------------------
   
-  # Instructions: Using the starter chunk below explore ggplot asethics
-  
-  df_msd_sub <- 
-    df_msd %>% 
-    filter(psnu == "Vancouver") %>% 
-    mutate(fy = fiscal_year %>% as.character()) 
-  
+  # Instructions: Using the starter chunk below explore ggplot astethics
+
   # Practice using the ashetic mappings for geom_point()
   # help(geom_point)
   # size
@@ -38,28 +30,37 @@
   # color
   # alpha to modify the plot below
   
+  # Replace ??? with a column from the data frame to experiment with the asthetic
+  
   # Size
-  df_msd_sub %>% 
-    ggplot(aes(y = cumulative, x = fy)) +
-    geom_point(size = "...") +
-    labs(title = "TESTING RESULTS")
-    facet_wrap(~mech_name) 
+  df_tst_psnu %>% 
+    ggplot(aes(y = cumulative, x = fy, size = "???")) +
+    geom_point() +
+    labs(title = "TESTING RESULTS") 
 
   # shape
-  df_msd_sub %>% 
-    ggplot(aes(y = cumulative, x = fy)) +
-    geom_point(shape = "...") +
+  df_tst_psnu %>% 
+    ggplot(aes(y = cumulative, x = fy, shape = "???")) +
+    geom_point() +
     labs(title = "TESTING RESULTS")
-  facet_wrap(~mech_name)  
     
   # color
-  df_msd_sub %>% 
-    ggplot(aes(y = cumulative, x = fy)) +
-    geom_point(color = "...") +
+  df_tst_psnu %>% 
+    ggplot(aes(y = cumulative, x = fy, color = "???")) +
+    geom_point() +
     labs(title = "TESTING RESULTS")
-  facet_wrap(~mech_name)  
   
   # alpha?
+  df_tst_psnu %>% 
+    ggplot(aes(y = cumulative, x = fy, alpha = "???")) +
+    geom_point() +
+    labs(title = "TESTING RESULTS")
+  
+  # Put it all together
+  df_tst_psnu %>% 
+    ggplot(aes(y = cumulative, x = fy, color = "???", shape = "???")) +
+    geom_point() +
+    labs(title = "TESTING RESULTS")
   
   # Review the vignette for more options
   vignette("ggplot2-specs")
