@@ -57,14 +57,14 @@ orange <- "#F27A2A"
 # Reshape the data so there is a single column for the share value and a column for the type of funding
 # Set pre-defined colors for various funding thresholds
 
-df_long <- 
-  df %>% 
+df_long <- df
+  # df %>% 
   # Sort the operating units based on the local share
   # Sorting and creating factors prior to reshaping makes plotting easier
-  mutate(operating_unit = fct_reorder(operating_unit, local),
-         operating_unit = fct_relevel(operating_unit, "Total", after = Inf),
-         operating_unit_long = fct_relevel(operating_unit_long, "Total", after = Inf)) %>% 
-  arrange(operating_unit)
+  # mutate(operating_unit = fct_reorder(operating_unit, local),
+  #        operating_unit = fct_relevel(operating_unit, "Total", after = Inf),
+  #        operating_unit_long = fct_relevel(operating_unit_long, "Total", after = Inf)) %>% 
+  # arrange(operating_unit)
 
 # Preview as a gt table
 # View the resulting data frame as a table
@@ -129,10 +129,21 @@ p
 ::: panel-tabset
 ### Code
 
-```{r}
+```{r Sorting}
+df_long <- 
+  df_long %>% 
+  mutate(
+   lp_value = case_when(
+    type == "local" ~ share, 
+    TRUE ~ NA_real_), 
+   ou = fct_reorder(ou, lp_value), # overwrite ou into a factor 
+   ou = fct_relevel(ou, "Total", after = Inf) # move Total to the Top of factor list
+   ) 
+  
 p <- df_long %>% 
   ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = fill_color)) +
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
