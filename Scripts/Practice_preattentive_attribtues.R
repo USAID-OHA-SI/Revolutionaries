@@ -9,7 +9,7 @@
   library(scales)
 
 # Load data directly from github
-  url <- 'https://github.com/USAID-OHA-SI/Revolutionaries/raw/tim_dev/Data_public/df_tst_psnu.rds'
+  url <- 'https://tinyurl.com/yt6pxurx'
   df_tst_psnu <- read_rds(url)
   
 # Inspect the data

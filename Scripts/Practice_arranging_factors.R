@@ -23,6 +23,12 @@
     ggplot(aes(x = cumulative, y = psnu)) +
     geom_col()
     
+  # What if we arrange the data before plotting?
+  # Will this work?
+  df_tst_psnu %>% 
+    arrange(cumulative) %>% 
+    ggplot(aes(x = cumulative, y = psnu)) +
+    geom_col()
     
   # Create a factor for the psnus, where the levels are mapped to cumulative results
   df_tst_fct <- 
