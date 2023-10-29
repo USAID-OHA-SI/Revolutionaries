@@ -22,7 +22,7 @@ The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congre
 
 ### Preparing your work space
 
-To load, munge and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or GitHub.
+To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or GitHub.
 
 ```{r prep environment}
 #| warning: false
@@ -41,7 +41,7 @@ library(extrafont) # register fonts with R
 
 ### Loading the data
 
-You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to the location of the data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
+You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
 
 ```{r load libraries}
 #| output: false
@@ -56,12 +56,14 @@ There are numerous options for reviewing data frame objects in R. The `View()` f
 
 ::: panel-tabset
 #### glimpse
+
 ```{r}
 # Inspect the data
 glimpse(df)
 ```
 
 #### gt preview
+
 ```{r}
 # Preview as a gt table
 # View the resulting data frame as a table
@@ -78,6 +80,7 @@ Making a stacked bar graph is easier if your data are in a long format. For this
 
 ::: panel-tabset
 #### Code
+
 ```{r}
 
 # The hexadecimal code below can be passed directly to ggplot to add color. 
@@ -102,7 +105,9 @@ df_long <-
          ou_long = operating_unit_long) %>% 
   arrange(ou)
 ```
-#### Data 
+
+#### Data
+
 ```{r}
 df_long %>% 
   slice(1:10) %>% 
@@ -117,6 +122,7 @@ To create a stacked bar graph with ggplot we can use the `geom_col()` geometry.
 
 ::: panel-tabset
 #### Code
+
 ```{r `code-line-numbers` = "2,3"}
 
 p <- df_long %>% 
@@ -138,7 +144,7 @@ p
 ```
 :::
 
-### Adding Text labels
+### Adding text labels
 
 ::: panel-tabset
 #### Code
@@ -249,6 +255,7 @@ p3
 :::
 
 ### Removing labels?
+
 Too many labels can make a plot feel clustered. We want the reader to focus on the most important points and if we try to highlight everything, it can be difficult to know where to focus attention.
 
 ::: panel-tabset
@@ -274,13 +281,15 @@ p4
 ```
 :::
 
-### Filtering out uncessary rows
+### Filtering out unnecessary rows
+
 In this case, the labels do not add much value, in fact they are kind of distracting. If the share in each country has to add to 100 and the focus of the graphic is on the local partner share, we can drop one of the labels and let the reader calculate the international share independently (it's not the focus).
 
 One way to remove the international shares from the graph would be to filter the data frame to `type == "local"`. With the international share bar and text dropped, we can also soften the labels using the `geom_text()` function. This drops the stroke and fill around the text object.
 
 ::: panel-tabset
 #### Code
+
 ```{r filter and simplify text}
 p5 <- df_long_ordered_bw %>% 
   filter(type == "local") %>% 
@@ -299,6 +308,7 @@ p5 <- df_long_ordered_bw %>%
 ```
 
 #### Plot
+
 ```{r}
 p5
 ```
@@ -310,6 +320,7 @@ If you recall from earlier in our talk, we mentioned that the USAID local partne
 
 ::: panel-tabset
 #### Munge Code
+
 ```{r}
 df_long_ordered_bw_goal <- 
   df_long_ordered_bw %>% 
@@ -331,6 +342,7 @@ df_long_ordered_bw_goal <-
 ```
 
 #### Plot Code
+
 ```{r apply facets and colors}
 p6 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
@@ -349,17 +361,21 @@ p6 <- df_long_ordered_bw_goal %>%
   scale_x_continuous(limits = c(0, 1.1)) +
   facet_grid(facet_order ~ ., scales = "free_y", drop = T, space = "free") 
 ```
+
 #### Plot
+
 ```{r}
 p6
 ```
 :::
 
 ### Reducing clutter
+
 Starting to get some breathing room, but we still have a lot of extra chart junk competing for our attention. Let's continue to reduce clutter and focus the visualization on the 70% threshold.
 
 ::: panel-tabset
 #### Code
+
 ```{r}
 p7 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
@@ -385,7 +401,9 @@ p7 <- df_long_ordered_bw_goal %>%
         axis.text.y = element_text(size = 8)) 
 
 ```
+
 #### Plot
+
 ```{r}
 p7
 ```
@@ -395,6 +413,7 @@ p7
 
 ::: panel-tabset
 #### Code
+
 ```{r final_touches}
 #| warning: false
 #| output: true
@@ -426,7 +445,9 @@ p8 <- p7 +
     fill = NULL,
     caption = glue("Source: Local Partner Team Data"))
 ```
+
 #### Plot
+
 ```{r}
 p8
 ```
