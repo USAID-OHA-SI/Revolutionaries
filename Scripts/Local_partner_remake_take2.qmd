@@ -1,61 +1,97 @@
 ---
 title: "Data Visualization Remake Take 2"
-author: "Tim Essam, Karishma Srikanth & Aaron Chafetz"
-format: html
+author: 
+  - name: Tim Essam
+  - name: Karishma Srikanth
+  - name: Aaron Chafetz
+date: 10/29/2023
+date-format: long
+format: 
+  html:
+    theme: 
+      light: flatly
+      dark: darkly
+    toc: true
 editor: visual
 fig-dpi: 300
 ---
 
-## Local Partner Data
+### Local Partner Data
 
 The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The .csv file consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
 
 ### Preparing your work space
 
-To load, munge and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment.
+To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or GitHub.
 
 ```{r prep environment}
 #| warning: false
 #| output: false
 
-library(tidyverse)
-library(vroom)
-library(glitr)
+library(tidyverse) 
+library(vroom) # for loading data
+library(glitr) # for custom colors
 library(scales) # for formatting
-library(glue)
+library(glue) # useful for creating dynamic text
+library(gt) # create beautiful tables
+library(gtExtras) # adorn gt tables
+library(extrafont) # register fonts with R
 
 ```
 
-## Loading and inspecting the data
+### Loading the data
 
-You can load the data directly from github using the `vroom` package.
+You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
 
 ```{r load libraries}
+#| output: false
 url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
 
 df <- vroom(url)
+```
+
+### Inspecting the data
+
+There are numerous options for reviewing data frame objects in R. The `View()` function is great for seeing the tabular layout of the data. You can also use `glimpse()` to get a short preview of each column, or even the `gt` package to create a nicely formatted table.
+
+::: panel-tabset
+#### glimpse
+
+```{r}
+# Inspect the data
 glimpse(df)
 ```
 
-Let's start be remaking the original visual in the default format you would likely see in an Excel workbook. Creating a stacked bar graph is much easier if we have the data stacked in a long format. We will also apply some colors to the type of funding.
+#### gt preview
 
-```{r excel_prep}
-#| warning: false
-#| output: true
-  
+```{r}
+# Preview as a gt table
+# View the resulting data frame as a table
+df %>% 
+  slice(1:10) %>%  
+  gt::gt() %>% 
+  gtExtras::gt_theme_nytimes()
+```
+:::
+
+### Reshaping & Creating Color Objects
+
+Making a stacked bar graph is easier if your data are in a long format. For this example, we'd like to stack the share of funding into a single column and to create a new column that captures the type of funding. We also to assign a blue color to locally funded partners and orange to international. We finish by renaming our operating unit variable.
+
+::: panel-tabset
+#### Code
+
+```{r}
+
+# The hexadecimal code below can be passed directly to ggplot to add color. 
 # Excel default colors
 blue <- "#3C67BE"
 orange <- "#F27A2A"
 
-# Reshape the data so there is a single column for the share value and a column for the type of funding
-# Set pre-defined colors for various funding thresholds
-
+# Reshape the data long for ggplot geom_col stacked bar graph
 df_long <- 
   df %>% 
-  # Sort the operating units based on the local share
-  mutate(operating_unit = fct_reorder(operating_unit, local),
-         operating_unit = fct_relevel(operating_unit, "Total", after = Inf)) %>% 
-    pivot_longer(
+  pivot_longer(
     cols = local:international,
     names_to = "type",
     values_to = "share"
@@ -65,75 +101,200 @@ df_long <-
     TRUE ~ orange
     )
   ) %>% 
-  rename(ou = operating_unit) %>% 
+  rename(ou = operating_unit, 
+         ou_long = operating_unit_long) %>% 
   arrange(ou)
-  
-
-glimpse(df_long)
 ```
 
-### Building a plot from the ground up
+#### Data
 
 ```{r}
 df_long %>% 
-  ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
+  slice(1:10) %>% 
+  gt::gt() %>% 
+  gtExtras::gt_theme_nytimes()
+```
+:::
+
+### Building a plot from the ground up
+
+To create a stacked bar graph with ggplot we can use the `geom_col()` geometry.
+
+::: panel-tabset
+#### Code
+
+```{r `code-line-numbers` = "2,3"}
+
+p <- df_long %>% 
+  ggplot(aes(y = ou_long, x = share)) +
+  geom_col(aes(fill = fill_color),
+           position = position_stack(reverse = T)) + # position_stack to alter order
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
-  ) 
-
+  ) +
+  scale_fill_identity()
 ```
 
-Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
+#### Plot
 
-### Get it right in black and white
-
-One of our common operating procedures is to try to get a plot right first in black and white, and then add color as needed. To convert the filled bars to black and white we can either create a new column and pass that to the `scale_fill_identity()` function or we can use `scale_fill_manual()` to manually recolor.
-
-```{r black and white}
-df_long %>% 
-  ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
-  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
-  labs(
-    x = NULL, y = NULL,
-    title = "FY 21 Local vs. International Budget - All Agencies",
-    fill = NULL
-  ) 
+```{r}
+p
 ```
+:::
 
-### Do we need labels?
+### Adding text labels
 
-We can add the labels back into the graph using the `geom_label()` function.
+::: panel-tabset
+#### Code
 
-```{r adding labels}
-df_long %>% 
-  ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
-  scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
-  geom_label(aes(label = percent(share, 1)),
-    size = 8 / .pt,
+```{r}
+p1 <- df_long %>% 
+  ggplot(aes(y = ou_long, x = share)) +
+  geom_col(aes(fill = fill_color),
+           position = position_stack(reverse = T)) +
+  geom_label(aes(label = scales::percent(share, 1)), # Adds labels
+    size = 8 / .pt, 
     position = position_stack(vjust = 0.5)
   ) +
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
+  ) +
+  scale_fill_identity()
+
+```
+
+#### Plot
+
+```{r}
+p1
+```
+:::
+
+### Sorting data
+
+::: panel-tabset
+#### Code
+
+```{r Sorting}
+df_long_ordered <- 
+  df_long %>% 
+  mutate(
+   lp_value = case_when(
+    type == "local" ~ share, # Creating a new column to sort factors on
+    TRUE ~ NA_real_), 
+   ou = fct_reorder(ou, lp_value), # overwrite ou into a factor 
+   ou = fct_relevel(ou, "Total", after = Inf) # move Total to the Top of factor list
+   ) %>% 
+  arrange(ou)
+  
+p2 <- df_long_ordered %>% 
+  ggplot(aes(y = ou, x = share)) + # Use the factor column as y-axis 
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
+  geom_label(aes(label = scales::percent(share, 1)), # Adds labels
+    size = 8 / .pt, 
+    position = position_stack(vjust = 0.5)
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) +
+  scale_fill_identity()
+```
+
+#### Plot
+
+```{r}
+p2
+```
+:::
+
+Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
+
+### Getting it right in black and white
+
+One of our common operating procedures is to try to get a plot right first in black and white, and then add color as needed. To convert the filled bars to black and white we can either create a new column and pass that to the `scale_fill_identity()` function or we can use `scale_fill_manual()` to manually recolor.
+
+::: panel-tabset
+#### Code
+
+```{r `code-line-numbers` ="6-8"}
+df_long_ordered_bw <- 
+  df_long_ordered %>% 
+  mutate(fill_color = case_when(
+    type == "local" ~ grey90k,
+    TRUE ~ grey30k
+  )) 
+  
+p3 <- df_long_ordered_bw %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
+  geom_label(aes(label = scales::percent(share, 1)), # Adds labels
+    size = 8 / .pt, 
+    position = position_stack(vjust = 0.5)
+  ) +
+  scale_fill_identity() +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
   ) 
 ```
+
+#### Plot
+
+```{r identity plot}
+p3
+```
+:::
+
+### Removing labels?
+
+Too many labels can make a plot feel clustered. We want the reader to focus on the most important points and if we try to highlight everything, it can be difficult to know where to focus attention.
+
+::: panel-tabset
+#### Code
+
+```{r adding labels}
+p4 <- df_long_ordered_bw %>% 
+  ggplot(aes(y = ou, x = share)) +
+  geom_col(aes(fill = fill_color), 
+           position = position_stack(reverse = TRUE)) +
+  scale_fill_identity() +
+  labs(
+    x = NULL, y = NULL,
+    title = "FY 21 Local vs. International Budget - All Agencies",
+    fill = NULL
+  ) 
+```
+
+#### Plot
+
+```{r}
+p4
+```
+:::
+
+### Filtering out unnecessary rows
 
 In this case, the labels do not add much value, in fact they are kind of distracting. If the share in each country has to add to 100 and the focus of the graphic is on the local partner share, we can drop one of the labels and let the reader calculate the international share independently (it's not the focus).
 
 One way to remove the international shares from the graph would be to filter the data frame to `type == "local"`. With the international share bar and text dropped, we can also soften the labels using the `geom_text()` function. This drops the stroke and fill around the text object.
 
+::: panel-tabset
+#### Code
+
 ```{r filter and simplify text}
-df_long %>% 
+p5 <- df_long_ordered_bw %>% 
   filter(type == "local") %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_col(aes(fill = type)) +
-  # scale_fill_manual(values = c("international" = grey30k, "local" = grey90k)) +
   scale_fill_manual(values = c("local" = "#be3455")) +
   geom_text(aes(label = percent(share, 1)),
     size = 7 / .pt,
@@ -146,13 +307,23 @@ df_long %>%
   ) 
 ```
 
-### Creating breathing room with facets
-
-If you recall from earlier in our talk, we mentioned that the USAID local partner goal was 70%. How can we break up the operating units to create some groupings? ...
+#### Plot
 
 ```{r}
-df_lp <- 
-  df_long %>% 
+p5
+```
+:::
+
+### Creating breathing room with facets
+
+If you recall from earlier in our talk, we mentioned that the USAID local partner goal was 70%. How can we break up the operating units to create some groupings?
+
+::: panel-tabset
+#### Munge Code
+
+```{r}
+df_long_ordered_bw_goal <- 
+  df_long_ordered_bw %>% 
  filter(type == "local") %>% 
  mutate(
     facet_order = case_when(
@@ -170,10 +341,10 @@ df_lp <-
   )
 ```
 
-Applying the new facets and colors
+#### Plot Code
 
 ```{r apply facets and colors}
-p_lp <- df_lp %>% 
+p6 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
   geom_col(aes(fill = recolor)) +
@@ -189,14 +360,24 @@ p_lp <- df_lp %>%
   ) +
   scale_x_continuous(limits = c(0, 1.1)) +
   facet_grid(facet_order ~ ., scales = "free_y", drop = T, space = "free") 
-
-p_lp
 ```
+
+#### Plot
+
+```{r}
+p6
+```
+:::
+
+### Reducing clutter
 
 Starting to get some breathing room, but we still have a lot of extra chart junk competing for our attention. Let's continue to reduce clutter and focus the visualization on the 70% threshold.
 
+::: panel-tabset
+#### Code
+
 ```{r}
-p_lp <- df_lp %>% 
+p7 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
   geom_col(aes(fill = recolor)) +
@@ -218,10 +399,20 @@ p_lp <- df_lp %>%
         strip.text = element_blank(),
         axis.text.x = element_blank(), 
         axis.text.y = element_text(size = 8)) 
-p_lp
+
 ```
 
-Clean up the edges & Add annotation
+#### Plot
+
+```{r}
+p7
+```
+:::
+
+### Cleaning up the edges & adding annotation
+
+::: panel-tabset
+#### Code
 
 ```{r final_touches}
 #| warning: false
@@ -231,7 +422,7 @@ goal_text <- "Four OUs reached\nthe 70% goal"
 fail_text <- "All of these operating\nunits fell short of the\n70% goal"
 font_size <- 7/.pt
 
-p_lp +
+p8 <- p7 +
   coord_cartesian(clip = "off", expand = F) +
   geom_text(data = . %>% filter(facet_order == ""), 
             aes(x = .45, label = "local partner share"),
@@ -254,3 +445,10 @@ p_lp +
     fill = NULL,
     caption = glue("Source: Local Partner Team Data"))
 ```
+
+#### Plot
+
+```{r}
+p8
+```
+:::
