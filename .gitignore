@@ -18,7 +18,6 @@
 *.xlsx
 *.xls
 *.zip
-*.png
 *.pptx
 *.tfl
 *.twb
@@ -28,7 +27,6 @@
 *.hyper
 *.sql
 *.parquet
-*.svg
 *.dfx
 *.json
 *.dta
@@ -38,8 +36,6 @@
 #nothing from these folders
 AI/*
 GIS/*
-Images/*
-Graphics/*
 Dataout/*
 
 # Keep everything from Data_public

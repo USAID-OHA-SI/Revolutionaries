@@ -14,6 +14,8 @@ format:
     toc: true
 editor: visual
 fig-dpi: 300
+execute:
+  warning: false
 ---
 
 ### Local Partner Data
@@ -177,6 +179,10 @@ p1
 ### Sorting data
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p1_markup-01-01.png)
+
 #### Code
 
 ```{r Sorting}
@@ -221,6 +227,10 @@ Sorting the data makes a huge difference already. We can start to see some order
 One of our common operating procedures is to try to get a plot right first in black and white, and then add color as needed. To convert the filled bars to black and white we can either create a new column and pass that to the `scale_fill_identity()` function or we can use `scale_fill_manual()` to manually recolor.
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p2_right_n_black_n_white-01.png)
+
 #### Code
 
 ```{r `code-line-numbers` ="6-8"}
@@ -259,6 +269,10 @@ p3
 Too many labels can make a plot feel clustered. We want the reader to focus on the most important points and if we try to highlight everything, it can be difficult to know where to focus attention.
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p3_declutter-01.png)
+
 #### Code
 
 ```{r adding labels}
@@ -288,6 +302,10 @@ In this case, the labels do not add much value, in fact they are kind of distrac
 One way to remove the international shares from the graph would be to filter the data frame to `type == "local"`. With the international share bar and text dropped, we can also soften the labels using the `geom_text()` function. This drops the stroke and fill around the text object.
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p4_drop_extra_bars-01.png)
+
 #### Code
 
 ```{r filter and simplify text}
@@ -319,6 +337,10 @@ p5
 If you recall from earlier in our talk, we mentioned that the USAID local partner goal was 70%. How can we break up the operating units to create some groupings?
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p5_facet-01.png)
+
 #### Munge Code
 
 ```{r}
@@ -374,6 +396,10 @@ p6
 Starting to get some breathing room, but we still have a lot of extra chart junk competing for our attention. Let's continue to reduce clutter and focus the visualization on the 70% threshold.
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p6_more_clutter-01.png)
+
 #### Code
 
 ```{r}
@@ -412,6 +438,10 @@ p7
 ### Cleaning up the edges & adding annotation
 
 ::: panel-tabset
+#### Desired Plot
+
+![](images/p7_final_touches-01.png)
+
 #### Code
 
 ```{r final_touches}
