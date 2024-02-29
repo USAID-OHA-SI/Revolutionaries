@@ -93,6 +93,16 @@ path_url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main
 df <- vroom(path_data)
 ```
 
+### Codebook
+
+| variable            | description                                                                                                                                                        | type      |
+|-----------|---------------------------------------------------|-----------|
+| operating_unit      | name of the operating unit (typically country name) funded by PEPFAR, abbreviated where longer than 20 characters                                                  | character |
+| operating_unit_long | full name of the operating unit (typically country name) funded by PEPFAR                                                                                          | character |
+| local               | share of PEPFAR funding directed to local implementing partners (operated by local institutions, governments, and community-based and community-led organizations) | double    |
+| international       | share of PEPFAR funding not going to local implementing partners (1-`local`)                                                                                       | double    |
+| goal                | does the share of local partner funding meet or exceed 70%? 1 =TRUE, 0 = FALSE                                                                                     | integer   |
+
 ### Inspecting the data
 
 There are numerous options for reviewing data frame objects in R. The `View()` function is great for seeing the tabular layout of the data. You can also use `glimpse()` to get a short preview of each column, or even the `gt` package to create a nicely formatted table.
@@ -196,8 +206,8 @@ p
 The final component we need to match to the original plot is the add the share labels with `geom_label()`
 
 ::: panel-tabset
-
 #### Original Plot
+
 ![](images/pepfar-report-to-congress_figure-h.png)
 
 #### Code
