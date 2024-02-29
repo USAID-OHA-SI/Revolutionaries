@@ -4,7 +4,7 @@ author:
   - name: Tim Essam
   - name: Karishma Srikanth
   - name: Aaron Chafetz
-date: 10/29/2023
+date: 3/6/2024
 date-format: long
 format: 
   html:
@@ -16,18 +16,50 @@ editor: visual
 fig-dpi: 300
 execute:
   warning: false
+  output: true
 ---
 
 ### Local Partner Data
 
-The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The .csv file consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
+The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The [.csv file](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/Data_public/PEPFAR_local_partner_share.csv) consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
+
+We will be recreating the Figure H graphic found within the report.
+
+![](images/pepfar-report-to-congress_figure-h.png)
 
 ### Preparing your work space
 
-To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or GitHub.
+To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or rOpenSci/GitHub.
 
-```{r prep environment}
-#| warning: false
+```{r}
+#| label: install packages
+#| eval: false
+#| output: false
+
+pkgs <- c("tidyverse", "vroom", "glitr", "scales", "glue", 
+          "gt", "gtExtras", "systemfonts", "usethis")
+
+install.packages(pkgs, repos = c('https://usaid-oha-si.r-universe.dev', 
+                                 'https://cloud.r-project.org'))
+
+```
+
+We recommend setting this exercise up within an [RStudio Project](https://r4ds.hadley.nz/workflow-scripts.html#projects). We recommend you download the course materials using `usethis::use_course()` and then opening it up as a project. You will be given a series of prompts and then the project will open automatically. If you need to come back to a project, you can access through the menu bar - File \> Open Project and then navigate to the Revolutionaries folder and select the `.Rproj` file
+
+```{r}
+#| label: use_course
+#| eval: false
+#| output: false
+#|   
+ 
+usethis::use_course("USAID-OHA-SI/Revolutionaries")
+
+```
+
+When you have the project open, you can load the packages we will use throughout this session.
+
+```{r}
+#| label: load libraries
 #| output: false
 
 library(tidyverse) 
@@ -37,7 +69,7 @@ library(scales) # for formatting
 library(glue) # useful for creating dynamic text
 library(gt) # create beautiful tables
 library(gtExtras) # adorn gt tables
-library(extrafont) # register fonts with R
+library(systemfonts) # register fonts with R
 
 ```
 
@@ -45,12 +77,31 @@ library(extrafont) # register fonts with R
 
 You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
 
-```{r load libraries}
+```{r}
+#| label: load data
 #| output: false
-url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
+#local path (if using RStudio Project)
+path_local <- "Data_public/PEPFAR_local_partner_share.csv"
 
-df <- vroom(url)
+#url path (if loading from GitHub)
+path_url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
+
+#determine which data path to use
+(path_data <- ifelse(file.exists(path_local), path_local, path_url))
+
+#load data into a dataframe (df)
+df <- vroom(path_data)
 ```
+
+### Codebook
+
+| variable            | description                                                                                                                                                        | type      |
+|-----------|---------------------------------------------------|-----------|
+| operating_unit      | name of the operating unit (typically country name) funded by PEPFAR, abbreviated where longer than 20 characters                                                  | character |
+| operating_unit_long | full name of the operating unit (typically country name) funded by PEPFAR                                                                                          | character |
+| local               | share of PEPFAR funding directed to local implementing partners (operated by local institutions, governments, and community-based and community-led organizations) | double    |
+| international       | share of PEPFAR funding not going to local implementing partners (1-`local`)                                                                                       | double    |
+| goal                | does the share of local partner funding meet or exceed 70%? 1 =TRUE, 0 = FALSE                                                                                     | integer   |
 
 ### Inspecting the data
 
@@ -60,6 +111,7 @@ There are numerous options for reviewing data frame objects in R. The `View()` f
 #### glimpse
 
 ```{r}
+#| label: glimpse preview
 # Inspect the data
 glimpse(df)
 ```
@@ -67,12 +119,13 @@ glimpse(df)
 #### gt preview
 
 ```{r}
+#| label: tabular preview
 # Preview as a gt table
 # View the resulting data frame as a table
 df %>% 
   slice(1:10) %>%  
-  gt::gt() %>% 
-  gtExtras::gt_theme_nytimes()
+  gt() %>% 
+  gt_theme_nytimes() #gtExtras
 ```
 :::
 
@@ -84,7 +137,7 @@ Making a stacked bar graph is easier if your data are in a long format. For this
 #### Code
 
 ```{r}
-
+#| label: reshape long
 # The hexadecimal code below can be passed directly to ggplot to add color. 
 # Excel default colors
 blue <- "#3C67BE"
@@ -111,22 +164,23 @@ df_long <-
 #### Data
 
 ```{r}
+#| label: inspect long
 df_long %>% 
   slice(1:10) %>% 
-  gt::gt() %>% 
-  gtExtras::gt_theme_nytimes()
+  gt() %>% 
+  gt_theme_nytimes() #gtExtras
 ```
 :::
 
 ### Building a plot from the ground up
 
-To create a stacked bar graph with ggplot we can use the `geom_col()` geometry.
+To create a stacked bar graph with ggplot we can use the `geom_col()` geometry with the `fill` aesthetic.
 
 ::: panel-tabset
 #### Code
 
 ```{r `code-line-numbers` = "2,3"}
-
+#| label: base plot
 p <- df_long %>% 
   ggplot(aes(y = ou_long, x = share)) +
   geom_col(aes(fill = fill_color),
@@ -142,16 +196,24 @@ p <- df_long %>%
 #### Plot
 
 ```{r}
+#| label: base plot printed
 p
 ```
 :::
 
 ### Adding text labels
 
+The final component we need to match to the original plot is the add the share labels with `geom_label()`
+
 ::: panel-tabset
+#### Original Plot
+
+![](images/pepfar-report-to-congress_figure-h.png)
+
 #### Code
 
 ```{r}
+#| label: label plot
 p1 <- df_long %>% 
   ggplot(aes(y = ou_long, x = share)) +
   geom_col(aes(fill = fill_color),
@@ -172,11 +234,14 @@ p1 <- df_long %>%
 #### Plot
 
 ```{r}
+#| label: label plot printed
 p1
 ```
 :::
 
 ### Sorting data
+
+For our very first step in the remake, we want to start by resorting the data by something more meaningfull that alphabetically. Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
 
 ::: panel-tabset
 #### Desired Plot
@@ -185,7 +250,8 @@ p1
 
 #### Code
 
-```{r Sorting}
+```{r}
+#| label: sort plot
 df_long_ordered <- 
   df_long %>% 
   mutate(
@@ -216,11 +282,10 @@ p2 <- df_long_ordered %>%
 #### Plot
 
 ```{r}
+#| label: sort plot printed
 p2
 ```
 :::
-
-Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
 
 ### Getting it right in black and white
 
@@ -234,6 +299,7 @@ One of our common operating procedures is to try to get a plot right first in bl
 #### Code
 
 ```{r `code-line-numbers` ="6-8"}
+#| label: bw plot
 df_long_ordered_bw <- 
   df_long_ordered %>% 
   mutate(fill_color = case_when(
@@ -259,7 +325,8 @@ p3 <- df_long_ordered_bw %>%
 
 #### Plot
 
-```{r identity plot}
+```{r}
+#| label: bw plot printed
 p3
 ```
 :::
@@ -275,7 +342,8 @@ Too many labels can make a plot feel clustered. We want the reader to focus on t
 
 #### Code
 
-```{r adding labels}
+```{r}
+#| label: lab plot
 p4 <- df_long_ordered_bw %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_col(aes(fill = fill_color), 
@@ -291,6 +359,7 @@ p4 <- df_long_ordered_bw %>%
 #### Plot
 
 ```{r}
+#| label: lab plot printed
 p4
 ```
 :::
@@ -308,7 +377,8 @@ One way to remove the international shares from the graph would be to filter the
 
 #### Code
 
-```{r filter and simplify text}
+```{r}
+#| label: filtered plot
 p5 <- df_long_ordered_bw %>% 
   filter(type == "local") %>% 
   ggplot(aes(y = ou, x = share)) +
@@ -328,6 +398,7 @@ p5 <- df_long_ordered_bw %>%
 #### Plot
 
 ```{r}
+#| label: filtered plot printed
 p5
 ```
 :::
@@ -344,10 +415,11 @@ If you recall from earlier in our talk, we mentioned that the USAID local partne
 #### Munge Code
 
 ```{r}
+#| label: facet munge
 df_long_ordered_bw_goal <- 
   df_long_ordered_bw %>% 
- filter(type == "local") %>% 
- mutate(
+  filter(type == "local") %>% 
+  mutate(
     facet_order = case_when(
       ou == "Total" ~ "",
       goal == 1 ~ "> 70%",
@@ -365,7 +437,8 @@ df_long_ordered_bw_goal <-
 
 #### Plot Code
 
-```{r apply facets and colors}
+```{r}
+#| label: facet plot
 p6 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
@@ -387,6 +460,7 @@ p6 <- df_long_ordered_bw_goal %>%
 #### Plot
 
 ```{r}
+#| label: facet plot printed
 p6
 ```
 :::
@@ -403,6 +477,7 @@ Starting to get some breathing room, but we still have a lot of extra chart junk
 #### Code
 
 ```{r}
+#| label: decluttered plot
 p7 <- df_long_ordered_bw_goal %>% 
   ggplot(aes(y = ou, x = share)) +
   geom_vline(xintercept = .7, linewidth = 2, color = grey10k, alpha = 0.75) +
@@ -431,11 +506,14 @@ p7 <- df_long_ordered_bw_goal %>%
 #### Plot
 
 ```{r}
+#| label: decluttered plot printed
 p7
 ```
 :::
 
 ### Cleaning up the edges & adding annotation
+
+This is looking great, but for our last step, we want to apply annotation and improve our title to amplify our takeaway message with our audience.
 
 ::: panel-tabset
 #### Desired Plot
@@ -444,10 +522,8 @@ p7
 
 #### Code
 
-```{r final_touches}
-#| warning: false
-#| output: true
-
+```{r}
+#| label: annotate plot
 goal_text <- "Four OUs reached\nthe 70% goal"
 fail_text <- "All of these operating\nunits fell short of the\n70% goal"
 font_size <- 7/.pt
@@ -479,6 +555,7 @@ p8 <- p7 +
 #### Plot
 
 ```{r}
+#| label: annotate plot printed
 p8
 ```
 :::
