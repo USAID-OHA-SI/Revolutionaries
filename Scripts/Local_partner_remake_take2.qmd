@@ -21,7 +21,7 @@ execute:
 
 ### Local Partner Data
 
-The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The .csv file consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
+The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The [.csv file](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/Data_public/PEPFAR_local_partner_share.csv) consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
 
 ### Preparing your work space
 
