@@ -23,12 +23,43 @@ execute:
 
 The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congress**](https://www.state.gov/wp-content/uploads/2022/05/PEPFAR2022.pdf). The [.csv file](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/Data_public/PEPFAR_local_partner_share.csv) consists of PEPFAR operating units that received funding to local and international partners. The share of funding is represented in the local and international columns.
 
+We will be recreating the Figure H graphic found within the report.
+
+![](images/pepfar-report-to-congress_figure-h.png)
+
 ### Preparing your work space
 
-To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or GitHub.
+To load, munge, and visualize the data requires numerous R packages. The code chunk below prepares your R-Studio environment. If you do not have any of the packages referenced below, you'll need to download them from CRAN or rOpenSci/GitHub.
 
 ```{r}
-#| label: prep environment
+#| label: install packages
+#| eval: false
+#| output: false
+
+pkgs <- c("tidyverse", "vroom", "glitr", "scales", "glue", 
+          "gt", "gtExtras", "systemfonts", "usethis")
+
+install.packages(pkgs, repos = c('https://usaid-oha-si.r-universe.dev', 
+                                 'https://cloud.r-project.org'))
+
+```
+
+We recommend setting this exercise up within an [RStudio Project](https://r4ds.hadley.nz/workflow-scripts.html#projects). We recommend you download the course materials using `usethis::use_course()` and then opening it up as a project. You will be given a series of prompts and then the project will open automatically. If you need to come back to a project, you can access through the menu bar - File \> Open Project and then navigate to the Revolutionaries folder and select the `.Rproj` file
+
+```{r}
+#| label: use_course
+#| eval: false
+#| output: false
+#|   
+ 
+usethis::use_course("USAID-OHA-SI/Revolutionaries")
+
+```
+
+When you have the project open, you can load the packages we will use throughout this session.
+
+```{r}
+#| label: load libraries
 #| output: false
 
 library(tidyverse) 
@@ -47,11 +78,19 @@ library(systemfonts) # register fonts with R
 You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
 
 ```{r}
-#| label: load libraries
+#| label: load data
 #| output: false
-url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
+#local path (if using RStudio Project)
+path_local <- "Data_public/PEPFAR_local_partner_share.csv"
 
-df <- vroom(url)
+#url path (if loading from GitHub)
+path_url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main/Data_public/PEPFAR_local_partner_share.csv"
+
+#determine which data path to use
+(path_data <- ifelse(file.exists(path_local), path_local, path_url))
+
+#load data into a dataframe (df)
+df <- vroom(path_data)
 ```
 
 ### Inspecting the data
@@ -62,7 +101,7 @@ There are numerous options for reviewing data frame objects in R. The `View()` f
 #### glimpse
 
 ```{r}
-#| label: inspect initial
+#| label: glimpse preview
 # Inspect the data
 glimpse(df)
 ```
@@ -75,8 +114,8 @@ glimpse(df)
 # View the resulting data frame as a table
 df %>% 
   slice(1:10) %>%  
-  gt::gt() %>% 
-  gtExtras::gt_theme_nytimes()
+  gt() %>% 
+  gt_theme_nytimes() #gtExtras
 ```
 :::
 
@@ -118,14 +157,14 @@ df_long <-
 #| label: inspect long
 df_long %>% 
   slice(1:10) %>% 
-  gt::gt() %>% 
-  gtExtras::gt_theme_nytimes()
+  gt() %>% 
+  gt_theme_nytimes() #gtExtras
 ```
 :::
 
 ### Building a plot from the ground up
 
-To create a stacked bar graph with ggplot we can use the `geom_col()` geometry.
+To create a stacked bar graph with ggplot we can use the `geom_col()` geometry with the `fill` aesthetic.
 
 ::: panel-tabset
 #### Code
@@ -154,7 +193,13 @@ p
 
 ### Adding text labels
 
+The final component we need to match to the original plot is the add the share labels with `geom_label()`
+
 ::: panel-tabset
+
+#### Original Plot
+![](images/pepfar-report-to-congress_figure-h.png)
+
 #### Code
 
 ```{r}
@@ -185,6 +230,8 @@ p1
 :::
 
 ### Sorting data
+
+For our very first step in the remake, we want to start by resorting the data by something more meaningfull that alphabetically. Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
 
 ::: panel-tabset
 #### Desired Plot
@@ -229,8 +276,6 @@ p2 <- df_long_ordered %>%
 p2
 ```
 :::
-
-Sorting the data makes a huge difference already. We can start to see some order in the data. In fact, it looks like a majority of the operating units are below the 50% threshold. For the sake of this exercise, let's focus on the 70% threshold as that is what is important to USAID.
 
 ### Getting it right in black and white
 
@@ -363,8 +408,8 @@ If you recall from earlier in our talk, we mentioned that the USAID local partne
 #| label: facet munge
 df_long_ordered_bw_goal <- 
   df_long_ordered_bw %>% 
- filter(type == "local") %>% 
- mutate(
+  filter(type == "local") %>% 
+  mutate(
     facet_order = case_when(
       ou == "Total" ~ "",
       goal == 1 ~ "> 70%",
@@ -457,6 +502,8 @@ p7
 :::
 
 ### Cleaning up the edges & adding annotation
+
+This is looking great, but for our last step, we want to apply annotation and improve our title to amplify our takeaway message with our audience.
 
 ::: panel-tabset
 #### Desired Plot
