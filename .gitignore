@@ -40,5 +40,6 @@ Dataout/*
 
 # Keep everything from Data_public
 !Data_public/*
+!Dataout/*
 
 

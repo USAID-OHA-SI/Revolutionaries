@@ -1,5 +1,5 @@
 ---
-title: "Data Visualization Remake Take 2"
+title: "Data Visualization Remake"
 author: 
   - name: Tim Essam
   - name: Karishma Srikanth
@@ -36,7 +36,7 @@ To load, munge, and visualize the data requires numerous R packages. The code ch
 #| eval: false
 #| output: false
 
-pkgs <- c("tidyverse", "vroom", "glitr", "scales", "glue", 
+pkgs <- c("tidyverse", "glitr", "scales", "glue", 
           "gt", "gtExtras", "systemfonts", "usethis")
 
 install.packages(pkgs, repos = c('https://usaid-oha-si.r-universe.dev', 
@@ -63,19 +63,18 @@ When you have the project open, you can load the packages we will use throughout
 #| output: false
 
 library(tidyverse) 
-library(vroom) # for loading data
 library(glitr) # for custom colors
-library(scales) # for formatting
+library(scales, warn.conflicts=FALSE) # for formatting
 library(glue) # useful for creating dynamic text
 library(gt) # create beautiful tables
 library(gtExtras) # adorn gt tables
-library(systemfonts) # register fonts with R
+library(systemfonts, warn.conflicts=FALSE) # register fonts with R
 
 ```
 
 ### Loading the data
 
-You can load the local partner data directly from GitHub using the `vroom` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in vroom's `vroom()` to read in the data.
+You can load the local partner data directly from GitHub using the `readr` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in `readr`'s `read_csv`()\` to read in the data.
 
 ```{r}
 #| label: load data
@@ -90,13 +89,13 @@ path_url <- "https://raw.githubusercontent.com/USAID-OHA-SI/Revolutionaries/main
 (path_data <- ifelse(file.exists(path_local), path_local, path_url))
 
 #load data into a dataframe (df)
-df <- vroom(path_data)
+df <- read_csv(path_data)
 ```
 
 ### Codebook
 
 | variable            | description                                                                                                                                                        | type      |
-|-----------|---------------------------------------------------|-----------|
+|-----------------|--------------------------------------|-----------------|
 | operating_unit      | name of the operating unit (typically country name) funded by PEPFAR, abbreviated where longer than 20 characters                                                  | character |
 | operating_unit_long | full name of the operating unit (typically country name) funded by PEPFAR                                                                                          | character |
 | local               | share of PEPFAR funding directed to local implementing partners (operated by local institutions, governments, and community-based and community-led organizations) | double    |
@@ -140,8 +139,8 @@ Making a stacked bar graph is easier if your data are in a long format. For this
 #| label: reshape long
 # The hexadecimal code below can be passed directly to ggplot to add color. 
 # Excel default colors
-blue <- "#3C67BE"
-orange <- "#F27A2A"
+hex_blue <- "#3C67BE"
+hex_orange <- "#F27A2A"
 
 # Reshape the data long for ggplot geom_col stacked bar graph
 df_long <- 
@@ -152,13 +151,21 @@ df_long <-
     values_to = "share"
   ) %>%
   mutate(fill_color = case_when(
-    type == "local" ~ blue,
-    TRUE ~ orange
-    )
-  ) %>% 
+    type == "local" ~ hex_blue,
+    TRUE ~ hex_orange
+  )) %>% 
   rename(ou = operating_unit, 
          ou_long = operating_unit_long) %>% 
   arrange(ou)
+```
+
+```{r}
+#| label: export long df
+#| echo: false
+#| eval: false
+
+write_rds(df_long, "Dataout/PEPFAR_local_long.rds")
+
 ```
 
 #### Data
@@ -256,13 +263,14 @@ df_long_ordered <-
   df_long %>% 
   mutate(
    lp_value = case_when(
-    type == "local" ~ share, # Creating a new column to sort factors on
-    TRUE ~ NA_real_), 
-   ou = fct_reorder(ou, lp_value), # overwrite ou into a factor 
+    type == "local" ~ share), # Creating a new column to sort factors on
+   ou = fct_reorder(ou, lp_value, .na_rm = TRUE), # overwrite ou into a factor 
    ou = fct_relevel(ou, "Total", after = Inf) # move Total to the Top of factor list
    ) %>% 
   arrange(ou)
   
+# levels(df_long_ordered$ou)
+
 p2 <- df_long_ordered %>% 
   ggplot(aes(y = ou, x = share)) + # Use the factor column as y-axis 
   geom_col(aes(fill = fill_color), 
@@ -277,6 +285,15 @@ p2 <- df_long_ordered %>%
     fill = NULL
   ) +
   scale_fill_identity()
+```
+
+```{r}
+#| label: export ordered df
+#| echo: false
+#| eval: false
+
+write_rds(df_long_ordered, "Dataout/PEPFAR_local_long-ordered.rds")
+
 ```
 
 #### Plot
@@ -321,6 +338,15 @@ p3 <- df_long_ordered_bw %>%
     title = "FY 21 Local vs. International Budget - All Agencies",
     fill = NULL
   ) 
+```
+
+```{r}
+#| label: export bw df
+#| echo: false
+#| eval: false
+
+write_rds(df_long_ordered_bw, "Dataout/PEPFAR_local_long-ordered-bw.rds")
+
 ```
 
 #### Plot
@@ -382,8 +408,7 @@ One way to remove the international shares from the graph would be to filter the
 p5 <- df_long_ordered_bw %>% 
   filter(type == "local") %>% 
   ggplot(aes(y = ou, x = share)) +
-  geom_col(aes(fill = type)) +
-  scale_fill_manual(values = c("local" = "#be3455")) +
+  geom_col(fill = "#be3455") +
   geom_text(aes(label = percent(share, 1)),
     size = 7 / .pt,
     hjust = 0,
@@ -391,7 +416,6 @@ p5 <- df_long_ordered_bw %>%
   labs(
     x = NULL, y = NULL,
     title = "FY 21 Local vs. International Budget - All Agencies",
-    fill = NULL
   ) 
 ```
 
@@ -433,6 +457,15 @@ df_long_ordered_bw_goal <-
     goal == 0 ~ "#d38388",
     TRUE ~ grey20k)
   )
+```
+
+```{r}
+#| label: export goal df
+#| echo: false
+#| eval: false
+
+write_rds(df_long_ordered_bw_goal, "Dataout/PEPFAR_local_long-ordered-bw-goal.rds")
+
 ```
 
 #### Plot Code
@@ -530,26 +563,25 @@ font_size <- 7/.pt
 
 p8 <- p7 +
   coord_cartesian(clip = "off", expand = F) +
-  geom_text(data = . %>% filter(facet_order == ""), 
+  geom_text(data = . %>% filter(ou == "Total"), 
             aes(x = .45, label = "local partner share"),
             color = "white", size = font_size) +
-    geom_text(data = . %>% filter(facet_order == ""), 
+  geom_text(data = . %>% filter(., ou == "Total"), 
             aes(x = .71, label = "70% threshold"),
             color = grey60k, size = font_size, 
             hjust = -0.1) +
-  geom_text(data = . %>% filter(facet_order == "> 70%" & ou == "Rwanda"), 
+  geom_text(data = . %>% filter(ou == "Rwanda"), 
             aes(x = .9, label = goal_text),
             color = "#be3455", size = font_size, 
             vjust = 1, hjust = 0) +
-  geom_text(data = . %>% filter(facet_order == "< 70%" & ou == "Botswana"), 
+  geom_text(data = . %>% filter(ou == "Botswana"), 
             aes(x = .72, label = fail_text),
             color = "#d38388", size = font_size, 
             vjust = 1, hjust = 0) +
-  
   labs(title = "IN FY21, FOUR OPERATING UNITS HAD ACHIEVED THE USAID LOCAL\nPARTNER BUDGET SHARE GOAL OF 70%",
-    subtitle = "Twenty four operating units are still short of the goal.",
-    fill = NULL,
-    caption = glue("Source: Local Partner Team Data"))
+       subtitle = "Twenty four operating units are still short of the goal.",
+       fill = NULL,
+       caption = glue("Source: Local Partner Team Data"))
 ```
 
 #### Plot
