@@ -74,7 +74,7 @@ library(systemfonts, warn.conflicts=FALSE) # register fonts with R
 
 ### Loading the data
 
-You can load the local partner data directly from GitHub using the `readr` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in `readr`'s `read_csv`()` to read in the data.
+You can load the local partner data directly from GitHub using the `readr` package. In the code below, we create an object (url) that points to data on our GitHub repo. You can use this argument in `readr`'s `read_csv`()\` to read in the data.
 
 ```{r}
 #| label: load data
@@ -95,7 +95,7 @@ df <- read_csv(path_data)
 ### Codebook
 
 | variable            | description                                                                                                                                                        | type      |
-|-----------|---------------------------------------------------|-----------|
+|----------------|-----------------------------------------|----------------|
 | operating_unit      | name of the operating unit (typically country name) funded by PEPFAR, abbreviated where longer than 20 characters                                                  | character |
 | operating_unit_long | full name of the operating unit (typically country name) funded by PEPFAR                                                                                          | character |
 | local               | share of PEPFAR funding directed to local implementing partners (operated by local institutions, governments, and community-based and community-led organizations) | double    |
@@ -167,8 +167,6 @@ df_long <-
 write_rds(df_long, "Dataout/PEPFAR_local_long.rds")
 
 ```
-
-
 
 #### Data
 
