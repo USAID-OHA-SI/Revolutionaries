@@ -42,4 +42,7 @@ Dataout/*
 !Data_public/*
 !Dataout/*
 
+#ignore markdown output
+*.html
+markdown/*/*
 
