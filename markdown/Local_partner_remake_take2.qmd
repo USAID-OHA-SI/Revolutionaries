@@ -25,7 +25,7 @@ The data used in this lesson are from the [**PEPFAR 2022 Annual Report to Congre
 
 We will be recreating the Figure H graphic found within the report.
 
-![](images/pepfar-report-to-congress_figure-h.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/pepfar-report-to-congress_figure-h.png?raw=true)
 
 ### Preparing your work space
 
@@ -95,7 +95,7 @@ df <- read_csv(path_data)
 ### Codebook
 
 | variable            | description                                                                                                                                                        | type      |
-|-----------------|--------------------------------------|-----------------|
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
 | operating_unit      | name of the operating unit (typically country name) funded by PEPFAR, abbreviated where longer than 20 characters                                                  | character |
 | operating_unit_long | full name of the operating unit (typically country name) funded by PEPFAR                                                                                          | character |
 | local               | share of PEPFAR funding directed to local implementing partners (operated by local institutions, governments, and community-based and community-led organizations) | double    |
@@ -215,7 +215,7 @@ The final component we need to match to the original plot is the add the share l
 ::: panel-tabset
 #### Original Plot
 
-![](images/pepfar-report-to-congress_figure-h.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/pepfar-report-to-congress_figure-h.png?raw=true)
 
 #### Code
 
@@ -253,7 +253,7 @@ For our very first step in the remake, we want to start by resorting the data by
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p1_markup-01-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p1_markup-01-01.png?raw=true)
 
 #### Code
 
@@ -311,7 +311,7 @@ One of our common operating procedures is to try to get a plot right first in bl
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p2_right_n_black_n_white-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p2_right_n_black_n_white-01.png?raw=true)
 
 #### Code
 
@@ -364,7 +364,7 @@ Too many labels can make a plot feel clustered. We want the reader to focus on t
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p3_declutter-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p3_declutter-01.png?raw=true)
 
 #### Code
 
@@ -399,7 +399,8 @@ One way to remove the international shares from the graph would be to filter the
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p4_drop_extra_bars-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p4_drop_extra_bars-01.png?raw=true)
+
 
 #### Code
 
@@ -434,7 +435,7 @@ If you recall from earlier in our talk, we mentioned that the USAID local partne
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p5_facet-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p5_facet-01.png?raw=true)
 
 #### Munge Code
 
@@ -505,7 +506,7 @@ Starting to get some breathing room, but we still have a lot of extra chart junk
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p6_more_clutter-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p6_more_clutter-01.png?raw=true)
 
 #### Code
 
@@ -551,7 +552,7 @@ This is looking great, but for our last step, we want to apply annotation and im
 ::: panel-tabset
 #### Desired Plot
 
-![](images/p7_final_touches-01.png)
+![](https://github.com/USAID-OHA-SI/Revolutionaries/blob/main/markdown/images/p7_final_touches-01.png?raw=true)
 
 #### Code
 
